@@ -3,7 +3,7 @@
 #include <v8-context.h>
 #include <iostream>
 #include <helper/v8helper.hpp>
-
+#include <map>
 namespace longjs
 {
 	uv_loop_t* tm_loop; 
@@ -17,8 +17,18 @@ namespace longjs
 		v8::Isolate* isolate,
 		v8::Local<v8::Function> callback)
 	{
+		uv_thread_t this_thread = uv_thread_self();
+		//static st_timer* wrap_timer; 
+		//if (wrap_timer != nullptr)
+		//{
+		//	/*wrap_timer->isolate = NULL; 
+		//	delete[]wrap_timer; 
+		//	wrap_timer = nullptr; */
+		//	wrap_timer = nullptr; 
+		//}
 		st_timer* wrap_timer = new st_timer();
-		wrap_timer->isolate = v8::Isolate::GetCurrent(); 
+		//wrap_timer = std::unique_ptr<st_timer>(new st_timer()); 
+		wrap_timer->isolate = isolate;
 		wrap_timer->callback.Reset(isolate,
 			callback); 
 		//bind data
@@ -33,18 +43,11 @@ namespace longjs
 
 	void app_timer::onTimerCallback(uv_timer_t* handle)
 	{
-		std::cout << "On timer callback" << std::endl;
 		st_timer* wrap_timer = (st_timer*)handle->data;
 		v8::Isolate* isolate = wrap_timer->isolate;
-		v8::Local<v8::Context> context = isolate->GetCurrentContext();
-		//v8::Context::Scope context_scope(context);
-		if (context.IsEmpty())
-		{
-			int a = 3; 
-		}
 		//check isolate 
 		if (isolate->IsDead()) {
-			std::cout << "Isolate dead\n"; 
+			std::cout << "Isolate dead\n";
 			return;
 		}
 		//create function callback
@@ -52,13 +55,37 @@ namespace longjs
 			isolate,
 			wrap_timer->callback
 		);
-		////run callback
-		v8::Local<v8::Value> result;
-		callback->Call(
-			context,
-			v8::Undefined(isolate),
-			0, 
-			NULL);
+		//check isolate not have context 
+		v8::Local<v8::Context> context; 
+		bool isIncontext = isolate->InContext();
+		if (!isIncontext)
+		{
+			v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
+			v8::Local<v8::Context> context = v8::Context::New(isolate, NULL, global);
+			v8::Context::Scope context_scope(context);
+			v8::Local<v8::Value> result;
+			callback->Call(
+				context,
+				v8::Undefined(isolate),
+				0,
+				NULL);
+		}
+		else
+		{
+			context = isolate->GetCurrentContext();
+			callback->Call(
+				context,
+				v8::Undefined(isolate),
+				0,
+				NULL);
+		}
+		uv_timer_stop(handle);
+		uv_close((uv_handle_t*)handle, on_timer_close_complete);
+	}
+
+	void app_timer::on_timer_close_complete(uv_handle_t* handle)
+	{
+		free(handle);
 	}
 
 	void app_timer::setTimeOut(const v8::FunctionCallbackInfo<v8::Value>& args)

@@ -43,10 +43,17 @@ namespace longjs
 		// Create a stack-allocated handle scope.
 		v8::HandleScope handle_scope(this->isolate);
 		//create context
-		context = createContext(isolate); 
+		context = createContext(isolate);
+		//v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
+		//global->Set(isolate, "print", v8::FunctionTemplate::New(isolate, print));
+		//app_timer app_timer;
+		//app_timer.initialize(main_loop); 
+		//global->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, app_timer.setTimeOut));
+		//context = v8::Context::New(this->isolate, NULL, global);
 		//try catch 
 		compileScript(path);
 		wait();
+		uv_loop_close(main_loop);
 	}
 	void app::shutdown()
 	{
@@ -85,7 +92,7 @@ namespace longjs
 	{
 		//create context scope 
 		v8::TryCatch try_catch(isolate);
-		v8::Context::Scope context_scope(this->context);
+		v8::Context::Scope context_scope(this->context); 
 		std::string raw_code;
 		if (!fs::readFile(path, raw_code))
 		{
@@ -116,7 +123,7 @@ namespace longjs
 
 	v8::Local<v8::Context> app::createContext(v8::Isolate* isolate)
 	{
-		global = v8::ObjectTemplate::New(isolate);
+		v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
 		// Bind the global 'print' function to the C++ Print callback.
 		bindGlobalFunction(global); 
 		// Create a new context.
