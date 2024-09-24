@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CXX_STANDARD 17)
 project(jsruntime LANGUAGES CXX)
 #find package
 find_package(rapidjson REQUIRED)
@@ -14,15 +15,32 @@ execute_process(COMMAND
 ${CMAKE_CURRENT_SOURCE_DIR}/build/tools/nuget.exe install v8-v143-x64 -OutputDirectory  ${CMAKE_CURRENT_SOURCE_DIR}/build/packages
 )
 set(HEADER_V8_PATH  ${CMAKE_CURRENT_SOURCE_DIR}/build/packages/v8-v143-x64.11.9.169.4/include)
+message(${HEADER_V8_PATH})
 set(LIB_V8_PATH_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/build/packages/v8-v143-x64.11.9.169.4/lib/Release)
 set(LIB_V8_PATH_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/build/packages/v8-v143-x64.11.9.169.4/lib/Debug)
 
-add_executable(longjs src/main.cpp)
+add_executable(longjs 
+                src/main.cpp
+               include/engine/app.hpp
+               include/engine/function.hpp
+               src/engine/app.cpp
+               include/engine/app_timer.hpp
+               src/engine/app_timer.cpp
+               include/fs/fs.hpp
+               src/fs/fs.cpp
+               include/helper/v8helper.hpp)
 
 #include 
 target_include_directories(longjs 
     PRIVATE ${HEADER_V8_PATH}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+
+
+
+
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(longjs PRIVATE rapidjson
                         PRIVATE libuv::uv
