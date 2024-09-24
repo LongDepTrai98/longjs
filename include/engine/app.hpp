@@ -41,7 +41,7 @@ namespace longjs
 		std::unique_ptr<v8::Platform> main_platform{ nullptr };
 		v8::Isolate* isolate{ nullptr };
 		v8::Local<v8::Context> context;
-		v8::Local<v8::ObjectTemplate> global; 
+		//v8::Local<v8::ObjectTemplate> global; 
 		v8::Isolate::CreateParams create_params;
 		uv_loop_t* main_loop;// main_loop
 	};
