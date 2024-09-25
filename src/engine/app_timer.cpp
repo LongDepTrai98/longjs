@@ -17,17 +17,7 @@ namespace longjs
 		v8::Isolate* isolate,
 		v8::Local<v8::Function> callback)
 	{
-		uv_thread_t this_thread = uv_thread_self();
-		//static st_timer* wrap_timer; 
-		//if (wrap_timer != nullptr)
-		//{
-		//	/*wrap_timer->isolate = NULL; 
-		//	delete[]wrap_timer; 
-		//	wrap_timer = nullptr; */
-		//	wrap_timer = nullptr; 
-		//}
 		st_timer* wrap_timer = new st_timer();
-		//wrap_timer = std::unique_ptr<st_timer>(new st_timer()); 
 		wrap_timer->isolate = isolate;
 		wrap_timer->callback.Reset(isolate,
 			callback); 
@@ -39,48 +29,33 @@ namespace longjs
 			onTimerCallback,
 			delay, 
 			interval);
+		wrap_timer->check();
 	}
 
 	void app_timer::onTimerCallback(uv_timer_t* handle)
 	{
 		st_timer* wrap_timer = (st_timer*)handle->data;
 		v8::Isolate* isolate = wrap_timer->isolate;
-		//check isolate 
-		if (isolate->IsDead()) {
-			std::cout << "Isolate dead\n";
-			return;
-		}
 		//create function callback
 		v8::Local<v8::Function> callback = v8::Local<v8::Function>::New(
 			isolate,
 			wrap_timer->callback
 		);
-		//check isolate not have context 
-		v8::Local<v8::Context> context; 
-		bool isIncontext = isolate->InContext();
-		if (!isIncontext)
+		v8::Local<v8::Context> context = isolate->GetCurrentContext(); 
+		if (context.IsEmpty())
 		{
-			v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
-			v8::Local<v8::Context> context = v8::Context::New(isolate, NULL, global);
-			v8::Context::Scope context_scope(context);
-			v8::Local<v8::Value> result;
-			callback->Call(
-				context,
-				v8::Undefined(isolate),
-				0,
-				NULL);
+			std::cout << "Context null" << std::endl; 
+			return; 
 		}
-		else
-		{
-			context = isolate->GetCurrentContext();
-			callback->Call(
-				context,
-				v8::Undefined(isolate),
-				0,
-				NULL);
+		if (isolate->IsDead()) {
+			std::cout << "Isolate dead\n";
+			return;
 		}
-		uv_timer_stop(handle);
-		uv_close((uv_handle_t*)handle, on_timer_close_complete);
+		callback->Call(
+			context,
+			v8::Undefined(isolate),
+			0,
+			NULL); 
 	}
 
 	void app_timer::on_timer_close_complete(uv_handle_t* handle)

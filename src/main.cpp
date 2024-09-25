@@ -75,6 +75,41 @@
 ////#include "v8.h"
 ////#include "v8-version.h"
 //
+//
+//#include <uv.h>
+//
+//uv_loop_t* loop;
+//uv_timer_t gc_req;
+//uv_timer_t fake_job_req;
+//
+//void callbackFn()
+//{
+//    printf("callback executed!\n");
+//}
+//
+//typedef void (*functionTemplate)(void);
+//
+//struct timer
+//{
+//    uv_timer_t req;
+//    std::string text;
+//    functionTemplate* callback;
+//    v8::Isolate* isolate; 
+//};
+//
+//void work(uv_timer_t* handle)
+//{
+//    timer* timerWrap = (timer*)handle->data;
+//    v8::Isolate* isolate = timerWrap->isolate; 
+//    if (!isolate->InContext())
+//    {
+//        int a = 3; 
+//    }
+//    ((functionTemplate)timerWrap->callback)();
+//
+//    printf("%s", timerWrap->text.c_str());
+//}
+//
 //void Print(const v8::FunctionCallbackInfo<v8::Value>& args)
 //{
 //    bool first = true;
@@ -93,6 +128,19 @@
 //
 //        printf("%s", *str);
 //    }
+//
+//    timer* timerWrap = new timer();
+//    timerWrap->callback = (functionTemplate*)callbackFn;
+//    timerWrap->text = "hello: \n";
+//    timerWrap->isolate = args.GetIsolate();
+//    timerWrap->req.data = (void*)timerWrap;
+//
+//    // could actually be a TCP download or something
+//    uv_timer_init(loop, &timerWrap->req);
+//    int delay = 1000;
+//    int interval = 0;
+//    uv_timer_start(&timerWrap->req, work, delay, interval);
+//
 //    printf("\n");
 //    fflush(stdout);
 //}
@@ -145,6 +193,8 @@
 //        v8::Context::Scope context_scope(context);
 //
 //        {
+//            loop = uv_default_loop();
+//
 //            // Create a string containing the JavaScript source code.
 //            v8::Local<v8::String> source =
 //                v8::String::NewFromUtf8Literal(isolate, "print('Hello, World!...');");
@@ -156,6 +206,8 @@
 //            // Run the script to get the result.
 //            v8::Local<v8::Value> result = script->Run(context).ToLocalChecked();
 //
+//       
+//            uv_run(loop, UV_RUN_DEFAULT); 
 //            // Convert the result to an UTF8 string and print it.
 //            v8::String::Utf8Value utf8(isolate, result);
 //            // printf("%s\n", *utf8);

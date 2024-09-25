@@ -9,15 +9,10 @@ namespace longjs
 	struct st_timer
 	{
 	public: 
-		~st_timer()
+		void check()
 		{
-			v8::Local<v8::Context> context = isolate->GetCurrentContext();
-			if (context.IsEmpty())
-			{
-				int a = 3; 
-			}
-			isolate = nullptr; 
 		}
+	public: 
 		//handler of timer 
 		uv_timer_t uv_timer; 
 		v8::Isolate* isolate; 
@@ -27,7 +22,7 @@ namespace longjs
 	{
 	public: 
 		static void setTimeOut(const v8::FunctionCallbackInfo<v8::Value>& args); 
-		static void initialize(uv_loop_t* loop);
+		void initialize(uv_loop_t* loop);
 		static void initTimer(const int64_t& delay,
 			const int64_t& interval, 
 			v8::Isolate* isolate,

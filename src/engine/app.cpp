@@ -11,6 +11,7 @@ namespace longjs
 	app::app()
 	{
 	}
+
 	v8::Platform* app::initialize()
 	{
 		v8::V8::InitializeICU();
@@ -38,22 +39,26 @@ namespace longjs
 	void app::initializeApp(const PATH& path)
 	{
 		//create loop
-		main_loop = uv_default_loop();
+		//main_loop = uv_default_loop();
 		v8::Isolate::Scope isolate_scope(this->isolate);
 		// Create a stack-allocated handle scope.
-		v8::HandleScope handle_scope(this->isolate);
+		v8::HandleScope handle_scope(this->isolate); 
+		//init global 
+		initGlobal(); 
+		//bind function
+		bindGlobalFunction(); 
 		//create context
-		context = createContext(isolate);
-		//v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
-		//global->Set(isolate, "print", v8::FunctionTemplate::New(isolate, print));
-		//app_timer app_timer;
-		//app_timer.initialize(main_loop); 
-		//global->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, app_timer.setTimeOut));
-		//context = v8::Context::New(this->isolate, NULL, global);
-		//try catch 
-		compileScript(path);
-		wait();
-		uv_loop_close(main_loop);
+		context = createContext();
+		v8::Context::Scope context_scope(context);
+		//lock scope 
+		{
+			compileScript(path);
+			wait();
+		}
+	}
+	void app::initGlobal()
+	{
+		global = v8::ObjectTemplate::New(isolate);
 	}
 	void app::shutdown()
 	{
@@ -62,7 +67,7 @@ namespace longjs
 		v8::V8::DisposePlatform();
 		delete create_params.array_buffer_allocator;
 	}
-	void app::bindGlobalFunction(v8::Local<v8::ObjectTemplate> global)
+	void app::bindGlobalFunction()
 	{
 		global->Set(isolate, 
 			"print",
@@ -74,7 +79,7 @@ namespace longjs
 		global->Set(isolate,
 			"setTimeout",
 			v8::FunctionTemplate::New(isolate, 
-				app_timer.setTimeOut)); 
+				app_timer.setTimeOut));
 	}
 	void app::excute(const PATH& path)
 	{
@@ -88,15 +93,17 @@ namespace longjs
 	{
 		return main_loop;
 	}
+	
 	void app::compileScript(const PATH& path)
 	{
+		
 		//create context scope 
 		v8::TryCatch try_catch(isolate);
-		v8::Context::Scope context_scope(this->context); 
+		v8::Context::Scope context_scope(context);
 		std::string raw_code;
 		if (!fs::readFile(path, raw_code))
 		{
-			throw std::exception("can't read file"); 
+			throw std::exception("can't read file");
 			return;
 		}
 		v8::Local<v8::String> source = v8Helper::createV8String(raw_code);
@@ -106,26 +113,22 @@ namespace longjs
 		// Compile the source code.
 		v8::MaybeLocal<v8::Script> script =
 			v8::Script::Compile(context,
-				source, 
+				source,
 				&origin);
 		if (script.IsEmpty())
-			return; 
-		auto result = script.ToLocalChecked()->Run(this->context);
+			return;
+		auto result = script.ToLocalChecked()->Run(context);
 		ReportException(isolate, &try_catch);
 		if (result.IsEmpty())
-			return; 
-		v8::String::Utf8Value utf8(this->isolate, result.ToLocalChecked());
+			return;
 	}
 
 	void app::compileModule(const std::string& raw_code)
 	{
 	}
 
-	v8::Local<v8::Context> app::createContext(v8::Isolate* isolate)
+	v8::Local<v8::Context> app::createContext()
 	{
-		v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
-		// Bind the global 'print' function to the C++ Print callback.
-		bindGlobalFunction(global); 
 		// Create a new context.
 		return v8::Context::New(isolate, NULL, global);
 	}
@@ -140,7 +143,7 @@ namespace longjs
 		if (message.IsEmpty()) {
 			// V8 didn't provide any extra information about this error; just
 			// print the exception.
-			fprintf(stderr, "%s\n", exception_string);
+			//fprintf(stderr, "%s\n", exception_string);
 		}
 		else {
 			// Print (filename):(line number): (message).
