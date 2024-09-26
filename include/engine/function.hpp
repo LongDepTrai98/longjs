@@ -16,6 +16,11 @@ namespace longjs
 			std::cout << *str << std::endl; 
 		}
 	}
+
+	static void test(const v8::FunctionCallbackInfo<v8::Value>& args)
+	{
+		int a = 3; 
+	}
 	
 }
 #endif // !_FUNCTION_DEFINE_HPP_

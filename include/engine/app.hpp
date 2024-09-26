@@ -17,7 +17,11 @@
 
 namespace longjs
 {
-	static uv_loop_t* main_loop = uv_default_loop();// main_loop
+	enum class js_type
+	{
+		SCRIPT,
+		MODULE
+	};
 	class app
 	{
 	public: 
@@ -27,19 +31,19 @@ namespace longjs
 		v8::Platform* initialize(); 
 		v8::Platform* getPlatform();
 		v8::Isolate* initializeIsolate(); 
-		void initializeApp(const PATH& path);
+		void initializeApp(const PATH& path, 
+			const js_type& type);
 		void initGlobal(); 
 		void shutdown(); 
-		void bindGlobalFunction();
+		void bindGlobalCPPFunction();
 		void excute(const PATH& script);
 		void wait(); 
-		uv_loop_t* getLoopUV();
 	private: 
 		void compileScript(const PATH& path);
-		void compileModule(const std::string& raw_code);
+		void compileModule(const PATH& path);
 		v8::Local<v8::Context> createContext();
-		void ReportException(v8::Isolate* isolate,
-			v8::TryCatch* try_catch);
+		//void ReportException(v8::Isolate* isolate,
+		//	v8::TryCatch* try_catch);
 	protected: 
 		std::unique_ptr<v8::Platform> main_platform{ nullptr };
 		v8::Isolate* isolate{ nullptr };

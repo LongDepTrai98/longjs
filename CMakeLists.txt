@@ -24,11 +24,18 @@ add_executable(longjs
                include/engine/app.hpp
                include/engine/function.hpp
                src/engine/app.cpp
+               include/engine/environment.hpp
+               src/engine/environment.cpp
+               include/engine/module.hpp
+               src/engine/module.cpp
                include/engine/app_timer.hpp
                src/engine/app_timer.cpp
                include/fs/fs.hpp
                src/fs/fs.cpp
-               include/helper/v8helper.hpp)
+               include/helper/v8helper.hpp
+               include/pattern/singleton.hpp
+               include/pattern/noncopyable/noncopyable.hpp
+               src/pattern/singleton.cpp)
 
 #include 
 target_include_directories(longjs 

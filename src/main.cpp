@@ -230,6 +230,7 @@ int main()
 {
 	app main_app; 
 	std::string path = "test.js"; 
+	//std::string path = "D:\\js\\geow\\node_modules\\geos-wasm\\build\\package\\geos.esm.js";
 	if (!main_app.initialize())
 	{
 		std::cout << "Can't init platform\n"; 
@@ -240,7 +241,8 @@ int main()
 		std::cout << "Can't init isolate\n"; 
 		return -1; 
 	}
-	main_app.initializeApp(path); 
+	main_app.initializeApp(path, 
+		js_type::MODULE); 
 	main_app.shutdown(); 
 	return 0; 
 }

@@ -9,10 +9,6 @@ namespace longjs
 	struct st_timer
 	{
 	public: 
-		void check()
-		{
-		}
-	public: 
 		//handler of timer 
 		uv_timer_t uv_timer; 
 		v8::Isolate* isolate; 
@@ -22,7 +18,6 @@ namespace longjs
 	{
 	public: 
 		static void setTimeOut(const v8::FunctionCallbackInfo<v8::Value>& args); 
-		void initialize(uv_loop_t* loop);
 		static void initTimer(const int64_t& delay,
 			const int64_t& interval, 
 			v8::Isolate* isolate,

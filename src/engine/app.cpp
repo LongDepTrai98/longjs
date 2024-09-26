@@ -1,11 +1,13 @@
 #include <engine/app.hpp>
 #include <v8.h>
 #include <v8-platform.h>
-#include "v8-initialization.h"
-#include "libplatform/libplatform.h"
+#include <v8-initialization.h>
+#include <libplatform/libplatform.h>
 #include <engine/function.hpp>
 #include <helper/v8helper.hpp>
 #include <engine/app_timer.hpp>
+#include <engine/module.hpp>
+#include <engine/environment.hpp>
 namespace longjs
 {
 	app::app()
@@ -36,25 +38,45 @@ namespace longjs
 		isolate = v8::Isolate::New(create_params);
 		return isolate;
 	}
-	void app::initializeApp(const PATH& path)
+	void app::initializeApp(const PATH& path,
+		const js_type& type)
 	{
 		//create loop
-		//main_loop = uv_default_loop();
+		environment::GetInstance()->setIsolate(isolate); 
+		v8::TryCatch try_catch(isolate);
 		v8::Isolate::Scope isolate_scope(this->isolate);
 		// Create a stack-allocated handle scope.
 		v8::HandleScope handle_scope(this->isolate); 
 		//init global 
 		initGlobal(); 
+		bindGlobalCPPFunction();
 		//bind function
-		bindGlobalFunction(); 
 		//create context
 		context = createContext();
 		v8::Context::Scope context_scope(context);
+		//compile global function 
+		compileScript("global.js"); 
 		//lock scope 
 		{
-			compileScript(path);
+			switch (type)
+			{
+			case js_type::SCRIPT: 
+			{
+				compileScript(path);
+				break; 
+			}
+			case js_type::MODULE: 
+			{
+				compileModule(path); 
+				break; 
+			}
+			default:
+				break;
+			}
 			wait();
 		}
+		v8Helper::ReportException(isolate, &try_catch);
+
 	}
 	void app::initGlobal()
 	{
@@ -67,31 +89,30 @@ namespace longjs
 		v8::V8::DisposePlatform();
 		delete create_params.array_buffer_allocator;
 	}
-	void app::bindGlobalFunction()
+	void app::bindGlobalCPPFunction()
 	{
+		//auto loop = isolate-
 		global->Set(isolate, 
 			"print",
 			v8::FunctionTemplate::New(isolate,
 				print));
 		//create function timer
 		app_timer app_timer; 
-		app_timer.initialize(main_loop); 
+		//app_timer.initialize(main_loop); 
 		global->Set(isolate,
-			"setTimeout",
+			"lj_timer",
 			v8::FunctionTemplate::New(isolate, 
 				app_timer.setTimeOut));
 	}
+
 	void app::excute(const PATH& path)
 	{
 		compileScript(path); 
 	}
 	void app::wait()
 	{
-		uv_run(main_loop, UV_RUN_DEFAULT);
-	}
-	uv_loop_t* app::getLoopUV()
-	{
-		return main_loop;
+		auto loop = environment::GetInstance()->getLoopUV(); 
+		uv_run(loop, UV_RUN_DEFAULT);
 	}
 	
 	void app::compileScript(const PATH& path)
@@ -99,7 +120,7 @@ namespace longjs
 		
 		//create context scope 
 		v8::TryCatch try_catch(isolate);
-		v8::Context::Scope context_scope(context);
+		//v8::Context::Scope context_scope(context);
 		std::string raw_code;
 		if (!fs::readFile(path, raw_code))
 		{
@@ -109,7 +130,8 @@ namespace longjs
 		v8::Local<v8::String> source = v8Helper::createV8String(raw_code);
 
 		//create script origin 
-		v8::ScriptOrigin origin(isolate, v8Helper::createV8String(path.string()));
+		v8::ScriptOrigin origin(isolate, 
+			v8Helper::createV8String(path.string()));
 		// Compile the source code.
 		v8::MaybeLocal<v8::Script> script =
 			v8::Script::Compile(context,
@@ -118,64 +140,30 @@ namespace longjs
 		if (script.IsEmpty())
 			return;
 		auto result = script.ToLocalChecked()->Run(context);
-		ReportException(isolate, &try_catch);
+		v8Helper::ReportException(isolate, &try_catch);
 		if (result.IsEmpty())
 			return;
 	}
 
-	void app::compileModule(const std::string& raw_code)
+	void app::compileModule(const PATH& path)
 	{
+		const std::string& module_name = path.string(); 
+		std::string raw_code; 
+		//get raw code 
+		if (!fs::readFile(path, raw_code))
+		{
+			throw std::exception("can't read file");
+			return;
+		}
+		module_wrap module; 
+		module.Evaluate(module_name, 
+			raw_code,
+			isolate);
 	}
 
 	v8::Local<v8::Context> app::createContext()
 	{
 		// Create a new context.
 		return v8::Context::New(isolate, NULL, global);
-	}
-
-
-	void app::ReportException(v8::Isolate* isolate,
-		v8::TryCatch* try_catch) {
-		v8::HandleScope handle_scope(isolate);
-		v8::String::Utf8Value exception(isolate, try_catch->Exception());
-		const char* exception_string = v8Helper::ToCString(exception);
-		v8::Local<v8::Message> message = try_catch->Message();
-		if (message.IsEmpty()) {
-			// V8 didn't provide any extra information about this error; just
-			// print the exception.
-			//fprintf(stderr, "%s\n", exception_string);
-		}
-		else {
-			// Print (filename):(line number): (message).
-			v8::String::Utf8Value filename(isolate,
-				message->GetScriptOrigin().ResourceName());
-			v8::Local<v8::Context> context(isolate->GetCurrentContext());
-			const char* filename_string = v8Helper::ToCString(filename);
-			int linenum = message->GetLineNumber(context).FromJust();
-			fprintf(stderr, "%s:%i: %s\n", filename_string, linenum, exception_string);
-			// Print line of source code.
-			v8::String::Utf8Value sourceline(
-				isolate, message->GetSourceLine(context).ToLocalChecked());
-			const char* sourceline_string = v8Helper::ToCString(sourceline);
-			fprintf(stderr, "%s\n", sourceline_string);
-			// Print wavy underline (GetUnderline is deprecated).
-			int start = message->GetStartColumn(context).FromJust();
-			for (int i = 0; i < start; i++) {
-				fprintf(stderr, " ");
-			}
-			int end = message->GetEndColumn(context).FromJust();
-			for (int i = start; i < end; i++) {
-				fprintf(stderr, "^");
-			}
-			fprintf(stderr, "\n");
-			v8::Local<v8::Value> stack_trace_string;
-			if (try_catch->StackTrace(context).ToLocal(&stack_trace_string) &&
-				stack_trace_string->IsString() &&
-				stack_trace_string.As<v8::String>()->Length() > 0) {
-				v8::String::Utf8Value stack_trace(isolate, stack_trace_string);
-				const char* err = v8Helper::ToCString(stack_trace);
-				fprintf(stderr, "%s\n", err);
-			}
-		}
 	}
 }

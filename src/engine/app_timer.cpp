@@ -4,19 +4,15 @@
 #include <iostream>
 #include <helper/v8helper.hpp>
 #include <map>
+#include <engine/environment.hpp>
 namespace longjs
 {
-	uv_loop_t* tm_loop; 
-	void app_timer::initialize(uv_loop_t* loop)
-	{
-		tm_loop = loop; 
-	}
-
 	void app_timer::initTimer(const int64_t& delay,
 		const int64_t& interval,
 		v8::Isolate* isolate,
 		v8::Local<v8::Function> callback)
 	{
+		auto tm_loop = environment::GetInstance()->getLoopUV(); 
 		st_timer* wrap_timer = new st_timer();
 		wrap_timer->isolate = isolate;
 		wrap_timer->callback.Reset(isolate,
@@ -29,7 +25,6 @@ namespace longjs
 			onTimerCallback,
 			delay, 
 			interval);
-		wrap_timer->check();
 	}
 
 	void app_timer::onTimerCallback(uv_timer_t* handle)
