@@ -103,6 +103,10 @@ namespace longjs
 			"lj_timer",
 			v8::FunctionTemplate::New(isolate, 
 				app_timer.setTimeOut));
+		global->Set(isolate,
+			"plus",
+			v8::FunctionTemplate::New(isolate,
+				test));
 	}
 
 	void app::excute(const PATH& path)

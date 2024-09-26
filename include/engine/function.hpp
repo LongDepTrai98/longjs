@@ -4,6 +4,7 @@
 #include <v8-function.h>
 #include <v8-context.h>
 #include <iostream>
+#include <helper/v8helper.hpp>
 namespace longjs
 {
 	static void print(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -19,7 +20,12 @@ namespace longjs
 
 	static void test(const v8::FunctionCallbackInfo<v8::Value>& args)
 	{
-		int a = 3; 
+		//return ar 
+		v8::Isolate* isolate = args.GetIsolate();
+		auto context = isolate->GetCurrentContext();
+		const int64_t& a = args[0]->IntegerValue(context).ToChecked();
+		const int64_t& b = args[1]->IntegerValue(context).ToChecked();
+		args.GetReturnValue().Set(v8::Number::New(args.GetIsolate(), a + b));
 	}
 	
 }

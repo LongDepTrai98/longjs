@@ -18,7 +18,6 @@ protected:
 	static std::unique_ptr<T> m_instance;
 	Singleton() {};
 	virtual ~Singleton() {
-		std::cout << "destroy instance\n";
 	};
 };
 

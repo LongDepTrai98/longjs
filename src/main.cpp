@@ -230,7 +230,6 @@ int main()
 {
 	app main_app; 
 	std::string path = "test.js"; 
-	//std::string path = "D:\\js\\geow\\node_modules\\geos-wasm\\build\\package\\geos.esm.js";
 	if (!main_app.initialize())
 	{
 		std::cout << "Can't init platform\n"; 
