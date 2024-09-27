@@ -8,6 +8,8 @@
 #include <engine/app_timer.hpp>
 #include <engine/module.hpp>
 #include <engine/environment.hpp>
+#include <binder/cppbinder.hpp>
+#include <binder/glfwbinder.hpp>
 namespace longjs
 {
 	app::app()
@@ -91,18 +93,18 @@ namespace longjs
 	}
 	void app::bindGlobalCPPFunction()
 	{
-		//auto loop = isolate-
-		global->Set(isolate, 
-			"print",
-			v8::FunctionTemplate::New(isolate,
-				print));
-		//create function timer
+		cppbinder::bindAll(isolate,
+			global); 
+
+		//timer 
 		app_timer app_timer; 
-		//app_timer.initialize(main_loop); 
 		global->Set(isolate,
 			"lj_timer",
 			v8::FunctionTemplate::New(isolate, 
 				app_timer.setTimeOut));
+		//custom 
+		glfwbinder::bindAll(isolate,
+			global); 
 		global->Set(isolate,
 			"plus",
 			v8::FunctionTemplate::New(isolate,

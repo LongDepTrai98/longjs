@@ -5,15 +5,19 @@
 #include <pattern/singleton.hpp>
 namespace longjs
 {
+	class workspace; 
 	class environment : public Singleton<environment>
 	{
 	public: 
 		environment(); 
-		void setIsolate(v8::Isolate* isolate_); 
+		void setIsolate(v8::Isolate* isolate_);
+		workspace* createWorkSpace(); 
 		uv_loop_t* getLoopUV(); 
+		workspace* getWorkSpace(); 
 	private: 
 		v8::Isolate* isolate; 
-		uv_loop_t* loop; 
+		uv_loop_t* loop;
+		std::unique_ptr<workspace> main_workspace; 
 	};
 }
 #endif // !_ENVIRONMENT_HPP_

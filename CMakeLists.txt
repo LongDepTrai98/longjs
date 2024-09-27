@@ -4,6 +4,7 @@ project(jsruntime LANGUAGES CXX)
 #find package
 find_package(rapidjson REQUIRED)
 find_package(libuv REQUIRED)
+find_package(glfw3 REQUIRED)
 
 #find v8 
 #INSTALL v8 
@@ -26,6 +27,14 @@ add_executable(longjs
                src/engine/app.cpp
                include/engine/environment.hpp
                src/engine/environment.cpp
+               include/uuid/uuid_4.h
+               src/uuid/uuid_4.cpp
+               include/uuid/UuidGenerator.h
+               src/uuid/UuidGenerator.cpp
+               include/engine/workspace.hpp
+               src/engine/workspace.cpp
+               include/engine/jsobject.hpp
+               src/engine/jsobject.cpp
                include/engine/module.hpp
                src/engine/module.cpp
                include/engine/app_timer.hpp
@@ -33,9 +42,16 @@ add_executable(longjs
                include/fs/fs.hpp
                src/fs/fs.cpp
                include/helper/v8helper.hpp
+               include/helper/rapidhelper.hpp
                include/pattern/singleton.hpp
                include/pattern/noncopyable/noncopyable.hpp
-               src/pattern/singleton.cpp)
+               src/pattern/singleton.cpp
+               include/binder/glfwbinder.hpp
+               src/binder/glfwbinder.cpp
+               include/binder/cppbinder.hpp
+               src/binder/cppbinder.cpp
+               include/binder/glfwobject.hpp
+               src/binder/glfwobject.cpp)
 
 #include 
 target_include_directories(longjs 
@@ -51,6 +67,7 @@ target_include_directories(longjs
 
 target_link_libraries(longjs PRIVATE rapidjson
                         PRIVATE libuv::uv
+                        PRIVATE glfw3
                         debug ${LIB_V8_PATH_DEBUG}/third_party_zlib.dll.lib
                         debug ${LIB_V8_PATH_DEBUG}/v8.dll.lib
                         debug ${LIB_V8_PATH_DEBUG}/v8_libbase.dll.lib

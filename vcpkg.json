@@ -2,7 +2,8 @@
   "name": "longjs",
   "version": "0.0.1",
   "dependencies": [
-    "rapidjson",
-    "libuv"
+    "glfw3",
+    "libuv",
+    "rapidjson"
   ]
 }
