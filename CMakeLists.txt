@@ -5,6 +5,7 @@ project(jsruntime LANGUAGES CXX)
 find_package(rapidjson REQUIRED)
 find_package(libuv REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(glew REQUIRED) 
 
 #find v8 
 #INSTALL v8 
@@ -51,7 +52,9 @@ add_executable(longjs
                include/binder/cppbinder.hpp
                src/binder/cppbinder.cpp
                include/binder/glfwobject.hpp
-               src/binder/glfwobject.cpp)
+               src/binder/glfwobject.cpp
+               include/binder/glbinder.hpp
+               src/binder/glbinder.cpp)
 
 #include 
 target_include_directories(longjs 
@@ -67,7 +70,8 @@ target_include_directories(longjs
 
 target_link_libraries(longjs PRIVATE rapidjson
                         PRIVATE libuv::uv
-                        PRIVATE glfw3
+                        PRIVATE glfw
+                        PRIVATE GLEW::glew 
                         debug ${LIB_V8_PATH_DEBUG}/third_party_zlib.dll.lib
                         debug ${LIB_V8_PATH_DEBUG}/v8.dll.lib
                         debug ${LIB_V8_PATH_DEBUG}/v8_libbase.dll.lib

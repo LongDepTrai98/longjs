@@ -4,6 +4,7 @@
   "dependencies": [
     "glfw3",
     "libuv",
-    "rapidjson"
+    "rapidjson",
+    "glew"
   ]
 }

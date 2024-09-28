@@ -47,6 +47,7 @@ namespace longjs
 			"glfwWindowShouldClose",
 			v8::FunctionTemplate::New(isolate,
 				_glfwWindowShouldClose));
+		
 	}
 	void glfwbinder::_glfwInit(const v8::FunctionCallbackInfo<v8::Value>& args)
 	{
@@ -128,6 +129,7 @@ namespace longjs
 		}
 		args.GetReturnValue().Set(v8::Boolean::New(args.GetIsolate(), bool(t)));
 	}
+	
 	GLFWwindow* glfwbinder::getMainWindow(const v8::FunctionCallbackInfo<v8::Value>& args)
 	{
 		v8::Isolate* isolate = args.GetIsolate();
@@ -150,4 +152,5 @@ namespace longjs
 		glfwobject* glfw_obj = environment::GetInstance()->getWorkSpace()->getObjectInWorkspace(uuid)->as<glfwobject>();
 		return glfw_obj->main_window; 
 	}
+
 }

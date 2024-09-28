@@ -10,6 +10,8 @@
 #include <engine/environment.hpp>
 #include <binder/cppbinder.hpp>
 #include <binder/glfwbinder.hpp>
+#include <binder/glbinder.hpp>
+
 namespace longjs
 {
 	app::app()
@@ -104,6 +106,8 @@ namespace longjs
 				app_timer.setTimeOut));
 		//custom 
 		glfwbinder::bindAll(isolate,
+			global); 
+		glbinder::bindAll(isolate,
 			global); 
 		global->Set(isolate,
 			"plus",
