@@ -191,12 +191,18 @@ namespace longjs
 	{
 		v8::Isolate* isolate = args.GetIsolate();
 		auto context = isolate->GetCurrentContext();
-		const int64_t& layout_index = args[0]->IntegerValue(context).ToChecked();
-		glVertexAttribPointer(0, 
-			3, 
-			GL_FLOAT, GL_FALSE, 
-			3 * sizeof(float),
-			(void*)0);
+		const int64_t& index = args[0]->IntegerValue(context).ToChecked();
+		const int64_t& size = args[1]->IntegerValue(context).ToChecked(); 
+		const int64_t& type = args[2]->IntegerValue(context).ToChecked();
+		const int64_t& normalized = args[3]->IntegerValue(context).ToChecked();
+		const int64_t& stride = args[4]->IntegerValue(context).ToChecked(); 
+		const int64_t& offset = args[5]->IntegerValue(context).ToChecked(); 
+		glVertexAttribPointer(index, 
+			size, 
+			type, 
+			normalized, 
+			stride * sizeof(float),
+			(void*)(offset));
 	}
 
 	void glbinder::_glEnableVertexAttribArray(const v8::FunctionCallbackInfo<v8::Value>& args)
